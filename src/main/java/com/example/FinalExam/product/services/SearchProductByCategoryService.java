@@ -5,6 +5,8 @@ import com.example.FinalExam.category.CategoryRepository;
 import com.example.FinalExam.product.ProductRepository;
 import com.example.FinalExam.product.model.ProductDTO;
 import com.example.FinalExam.product.model.SearchProductQuery;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +15,8 @@ import java.util.List;
 @Service
 public class SearchProductByCategoryService implements Query<SearchProductQuery, List<ProductDTO>> {
 
+    private static final Logger logger = LoggerFactory.getLogger(SearchProductByCategoryService.class);
+
     private final ProductRepository productRepository;
 
     public SearchProductByCategoryService(ProductRepository productRepository, CategoryRepository categoryRepository) {
@@ -20,10 +24,18 @@ public class SearchProductByCategoryService implements Query<SearchProductQuery,
     }
 
     public ResponseEntity<List<ProductDTO>> execute(SearchProductQuery searchProductQuery){
+        logger.debug("Searching products by category: '{}', sort: {}",
+                searchProductQuery.getCategory(), searchProductQuery.getSort());
 
-        return ResponseEntity.ok(productRepository.searchByCategory(searchProductQuery.getCategory(), searchProductQuery.getSort())
+        List<ProductDTO> products = productRepository.searchByCategory(
+                        searchProductQuery.getCategory(), searchProductQuery.getSort())
                 .stream()
                 .map(ProductDTO::new)
-                .toList());
+                .toList();
+
+        logger.info("Category search results: {} products found in category '{}'",
+                products.size(), searchProductQuery.getCategory());
+
+        return ResponseEntity.ok(products);
     }
 }

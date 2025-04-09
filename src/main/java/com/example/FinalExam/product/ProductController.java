@@ -6,6 +6,8 @@ import com.example.FinalExam.product.model.SearchProductQuery;
 import com.example.FinalExam.product.model.UpdateProductCommand;
 import com.example.FinalExam.product.services.*;
 import com.example.FinalExam.utils.SortMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -19,42 +21,56 @@ import java.util.UUID;
 @RestController
 public class ProductController {
 
+    private static final Logger logger = LoggerFactory.getLogger(ProductController.class);
+
     private final CreateProductService createProductService;
     private final DeleteProductService deleteProductService;
     private final GetProductService getProductService;
     private final UpdateProductService updateProductService;
     private final SearchProductService searchProductService;
-    private final SearchProductByCategoryService searchCategoryService;
+    private final SearchProductByCategoryService searchProductByCategoryService;
     private final GetProductsService getProductsService;
 
-    public ProductController(CreateProductService createProductService, DeleteProductService deleteProductService, GetProductService getProductService, UpdateProductService updateProductService, SearchProductService searchProductService, SearchProductByCategoryService searchCategoryService, GetProductsService getProductsService) {
+    public ProductController(CreateProductService createProductService, DeleteProductService deleteProductService, GetProductService getProductService, UpdateProductService updateProductService, SearchProductService searchProductService, SearchProductByCategoryService searchProductByCategoryService, GetProductsService getProductsService) {
         this.createProductService = createProductService;
         this.deleteProductService = deleteProductService;
         this.getProductService = getProductService;
         this.updateProductService = updateProductService;
         this.searchProductService = searchProductService;
-        this.searchCategoryService = searchCategoryService;
+        this.searchProductByCategoryService = searchProductByCategoryService;
         this.getProductsService = getProductsService;
     }
 
     @PostMapping("/product")
     public ResponseEntity<ProductDTO> createProduct(@RequestBody Product product){
-        return createProductService.execute(product);
+        logger.info("Request received to create product: {}", product.getName());
+        ResponseEntity<ProductDTO> response = createProductService.execute(product);
+        logger.info("Product created with ID: {}", response.getBody().getId());
+        return response;
     }
 
     @GetMapping("/product/{id}")
     public ResponseEntity<ProductDTO> getProduct(@PathVariable UUID id){
-        return getProductService.execute(id);
+        logger.info("Request received to get product with ID: {}", id);
+        ResponseEntity<ProductDTO> response = getProductService.execute(id);
+        logger.info("Product found: {}", response.getBody().getName());
+        return response;
     }
 
     @DeleteMapping("/product/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable UUID id){
-        return deleteProductService.execute(id);
+        logger.info("Request received to delete product with ID: {}", id);
+        ResponseEntity<Void> response = deleteProductService.execute(id);
+        logger.info("Product deleted with ID: {}, status: {}", id, response.getStatusCode());
+        return response;
     }
 
     @PutMapping("/product/{id}")
     public ResponseEntity<ProductDTO> updateProduct(@PathVariable UUID id, @RequestBody Product product){
-        return updateProductService.execute(new UpdateProductCommand(id, product));
+        logger.info("Request received to update product with ID: {}", id);
+        ResponseEntity<ProductDTO> response = updateProductService.execute(new UpdateProductCommand(id, product));
+        logger.info("Product updated with ID: {}", id);
+        return response;
     }
 
     @GetMapping("/product/search")
@@ -63,18 +79,23 @@ public class ProductController {
             @RequestParam(required = false, defaultValue = "") String category,
             @RequestParam(required = false, defaultValue = "") String sortBy
     ){
+        logger.info("Search request received - search: {}, category: {}, sortBy: {}", search, category, sortBy);
         Sort sort = SortMapper.map(sortBy);
-        return searchProductService.execute(new SearchProductQuery(search, category, sort));
+        ResponseEntity<List<ProductDTO>> response = searchProductService.execute(new SearchProductQuery(search, category, sort));
+        logger.info("Search completed, found {} products", response.getBody().size());
+        return response;
     }
 
     @GetMapping("/product/category")
-    public ResponseEntity<List<ProductDTO>> searchCategory(
+    public ResponseEntity<List<ProductDTO>> searchProductByCategory(
             @RequestParam String category,
             @RequestParam(required = false, defaultValue = "") String sortBy
     ){
+        logger.info("Request received to search product by category - category: {}, sortBy: {}", category, sortBy);
         Sort sort = SortMapper.map(sortBy);
-
-        return searchCategoryService.execute(new SearchProductQuery(null, category, sort));
+        ResponseEntity<List<ProductDTO>> response = searchProductByCategoryService.execute(new SearchProductQuery(null, category, sort));
+        logger.info("Category search completed, found {} products", response.getBody().size());
+        return response;
     }
 
     @GetMapping("/products")
@@ -83,9 +104,11 @@ public class ProductController {
             @RequestParam(required = false, defaultValue = "10") int size,
             @RequestParam(required = false, defaultValue = "") String sortBy
     ) {
+        logger.info("Request received to get products - page: {}, size: {}, sortBy: {}", page, size, sortBy);
         Sort sort = SortMapper.map(sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
-
-        return getProductsService.execute(pageable);
+        ResponseEntity<Page<ProductDTO>> response = getProductsService.execute(pageable);
+        logger.info("Retrieved products page {} of size {}, total: {}", page, size, response.getBody().getTotalElements());
+        return response;
     }
 }

@@ -7,14 +7,19 @@ import com.example.FinalExam.product.model.Product;
 import com.example.FinalExam.product.model.ProductDTO;
 import com.example.FinalExam.product.model.UpdateProductCommand;
 import com.example.FinalExam.product.validators.ProductValidator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class UpdateProductService implements Command<UpdateProductCommand, ProductDTO> {
+
+    private static final Logger logger = LoggerFactory.getLogger(UpdateProductService.class);
 
     private final ProductRepository productRepository;
 
@@ -25,17 +30,24 @@ public class UpdateProductService implements Command<UpdateProductCommand, Produ
     @Override
     @CacheEvict(value = "products", allEntries = true)
     public ResponseEntity<ProductDTO> execute(UpdateProductCommand input) {
-        Optional<Product> productOptional = productRepository.findById(input.getId());
+        UUID id = input.getId();
+        logger.debug("Fetching product with ID: {}", id);
 
-        if(productOptional.isPresent()){
+        Optional<Product> productOptional = productRepository.findById(id);
+        if (productOptional.isPresent()) {
             Product updatedProduct = input.getProduct();
-            updatedProduct.setId(input.getId());
+            updatedProduct.setId(id);
+
+            logger.debug("Validating product: {}", updatedProduct.getName());
             ProductValidator.execute(updatedProduct);
+            logger.debug("Product validation passed: {}", updatedProduct.getName());
+
             productRepository.save(updatedProduct);
+            logger.info("Product updated successfully: ID={} Name={}", id, updatedProduct.getName());
+
             return ResponseEntity.ok(new ProductDTO(updatedProduct));
         }
 
-//      return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         throw new ProductNotFoundException();
     }
 }
