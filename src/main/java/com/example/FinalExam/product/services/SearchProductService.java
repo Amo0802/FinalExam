@@ -6,7 +6,6 @@ import com.example.FinalExam.product.model.ProductDTO;
 import com.example.FinalExam.product.model.SearchProductQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,7 +21,7 @@ public class SearchProductService implements Query<SearchProductQuery, List<Prod
         this.productRepository = productRepository;
     }
 
-    public ResponseEntity<List<ProductDTO>> execute(SearchProductQuery input){
+    public List<ProductDTO> execute(SearchProductQuery input){
         logger.debug("Searching products with text: '{}', category: '{}', sort: {}",
                 input.getSearch(), input.getCategory(), input.getSort());
 
@@ -33,6 +32,6 @@ public class SearchProductService implements Query<SearchProductQuery, List<Prod
                 .toList();
 
         logger.info("Search results: {} products found", products.size());
-        return ResponseEntity.ok(products);
+        return products;
     }
 }

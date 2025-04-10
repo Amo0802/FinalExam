@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -24,7 +23,7 @@ public class GetProductsService implements Query<Pageable, Page<ProductDTO>> {
 
     @Override
     @Cacheable(value = "products", key = "#pageable.pageNumber + '_' + #pageable.pageSize + '_' + #pageable.sort")
-    public ResponseEntity<Page<ProductDTO>> execute(Pageable pageable) {
+    public Page<ProductDTO> execute(Pageable pageable) {
 
         logger.debug("Fetching products with pageable: page={}, size={}, sort={}",
                 pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
@@ -35,6 +34,6 @@ public class GetProductsService implements Query<Pageable, Page<ProductDTO>> {
         logger.info("Retrieved {} products out of {} total",
                 productDTOs.getNumberOfElements(), productDTOs.getTotalElements());
 
-        return ResponseEntity.ok(productDTOs);
+        return productDTOs;
     }
 }

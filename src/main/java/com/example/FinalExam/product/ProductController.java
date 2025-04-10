@@ -12,9 +12,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
@@ -44,33 +46,35 @@ public class ProductController {
     @PostMapping("/product")
     public ResponseEntity<ProductDTO> createProduct(@RequestBody Product product){
         logger.info("Request received to create product: {}", product.getName());
-        ResponseEntity<ProductDTO> response = createProductService.execute(product);
-        logger.info("Product created with ID: {}", response.getBody().getId());
-        return response;
+        ProductDTO response = createProductService.execute(product);
+        logger.info("Product created with ID: {}", response.getId());
+        URI location = URI.create("/products/" + response.getId());
+        return ResponseEntity.created(location).body(response);
     }
 
     @GetMapping("/product/{id}")
     public ResponseEntity<ProductDTO> getProduct(@PathVariable UUID id){
         logger.info("Request received to get product with ID: {}", id);
-        ResponseEntity<ProductDTO> response = getProductService.execute(id);
-        logger.info("Product found: {}", response.getBody().getName());
-        return response;
+       ProductDTO response = getProductService.execute(id);
+        logger.info("Product found: {}", response.getName());
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/product/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable UUID id){
         logger.info("Request received to delete product with ID: {}", id);
-        ResponseEntity<Void> response = deleteProductService.execute(id);
-        logger.info("Product deleted with ID: {}, status: {}", id, response.getStatusCode());
-        return response;
+        deleteProductService.execute(id);
+        logger.info("Product deleted with ID: {}", id);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        //return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/product/{id}")
     public ResponseEntity<ProductDTO> updateProduct(@PathVariable UUID id, @RequestBody Product product){
         logger.info("Request received to update product with ID: {}", id);
-        ResponseEntity<ProductDTO> response = updateProductService.execute(new UpdateProductCommand(id, product));
+        ProductDTO response = updateProductService.execute(new UpdateProductCommand(id, product));
         logger.info("Product updated with ID: {}", id);
-        return response;
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/product/search")
@@ -81,9 +85,9 @@ public class ProductController {
     ){
         logger.info("Search request received - search: {}, category: {}, sortBy: {}", search, category, sortBy);
         Sort sort = SortMapper.map(sortBy);
-        ResponseEntity<List<ProductDTO>> response = searchProductService.execute(new SearchProductQuery(search, category, sort));
-        logger.info("Search completed, found {} products", response.getBody().size());
-        return response;
+        List<ProductDTO> response = searchProductService.execute(new SearchProductQuery(search, category, sort));
+        logger.info("Search completed, found {} products", response.size());
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/product/category")
@@ -93,9 +97,9 @@ public class ProductController {
     ){
         logger.info("Request received to search product by category - category: {}, sortBy: {}", category, sortBy);
         Sort sort = SortMapper.map(sortBy);
-        ResponseEntity<List<ProductDTO>> response = searchProductByCategoryService.execute(new SearchProductQuery(null, category, sort));
-        logger.info("Category search completed, found {} products", response.getBody().size());
-        return response;
+        List<ProductDTO> response = searchProductByCategoryService.execute(new SearchProductQuery(null, category, sort));
+        logger.info("Category search completed, found {} products", response.size());
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/products")
@@ -107,8 +111,8 @@ public class ProductController {
         logger.info("Request received to get products - page: {}, size: {}, sortBy: {}", page, size, sortBy);
         Sort sort = SortMapper.map(sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
-        ResponseEntity<Page<ProductDTO>> response = getProductsService.execute(pageable);
-        logger.info("Retrieved products page {} of size {}, total: {}", page, size, response.getBody().getTotalElements());
-        return response;
+        Page<ProductDTO> response = getProductsService.execute(pageable);
+        logger.info("Retrieved products page {} of size {}, total: {}", page, size, response.getTotalElements());
+        return ResponseEntity.ok(response);
     }
 }

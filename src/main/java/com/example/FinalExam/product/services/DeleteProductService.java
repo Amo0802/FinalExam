@@ -7,8 +7,6 @@ import com.example.FinalExam.product.ProductRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -27,16 +25,14 @@ public class DeleteProductService implements Command<UUID, Void> {
 
     @Override
     @CacheEvict(value = "products", allEntries = true)
-    public ResponseEntity<Void> execute(UUID id) {
+    public Void execute(UUID id) {
         logger.debug("Fetching product for deleting with ID: {}", id);
         Optional<Product> productWeWantToDelete = productRepository.findById(id);
         if(productWeWantToDelete.isPresent()){
             productRepository.deleteById(id);
             logger.info("Product deleted from DB: {}", productWeWantToDelete.get().getName());
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
         }
 
-//      return ResponseEntity.notFound().build();
         throw new ProductNotFoundException();
     }
 }

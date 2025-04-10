@@ -29,7 +29,7 @@ public class UpdateProductService implements Command<UpdateProductCommand, Produ
 
     @Override
     @CacheEvict(value = "products", allEntries = true)
-    public ResponseEntity<ProductDTO> execute(UpdateProductCommand input) {
+    public ProductDTO execute(UpdateProductCommand input) {
         UUID id = input.getId();
         logger.debug("Fetching product with ID: {}", id);
 
@@ -45,7 +45,7 @@ public class UpdateProductService implements Command<UpdateProductCommand, Produ
             productRepository.save(updatedProduct);
             logger.info("Product updated successfully: ID={} Name={}", id, updatedProduct.getName());
 
-            return ResponseEntity.ok(new ProductDTO(updatedProduct));
+            return new ProductDTO(updatedProduct);
         }
 
         throw new ProductNotFoundException();

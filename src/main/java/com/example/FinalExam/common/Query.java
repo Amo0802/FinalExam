@@ -1,7 +1,5 @@
 package com.example.FinalExam.common;
 
-import org.springframework.http.ResponseEntity;
-
 public interface Query <I, O>{
-    ResponseEntity<O> execute(I input);
+    O execute(I input);
 }
