@@ -31,6 +31,7 @@ public class DeleteProductService implements Command<UUID, Void> {
         if(productWeWantToDelete.isPresent()){
             productRepository.deleteById(id);
             logger.info("Product deleted from DB: {}", productWeWantToDelete.get().getName());
+            return null;
         }
 
         throw new ProductNotFoundException();

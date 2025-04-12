@@ -1,18 +1,18 @@
 package com.example.FinalExam.product.model;
 
 import lombok.Getter;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Pageable;
 
 @Getter
 public class SearchProductQuery {
 
     private String search;
     private String category;
-    private Sort sort;
+    private Pageable pageable;
 
-    public SearchProductQuery(String search, String category, Sort sort) {
+    public SearchProductQuery(String search, String category, Pageable pageable) {
         this.search = search;
         this.category = category;
-        this.sort = sort;
+        this.pageable = pageable;
     }
 }

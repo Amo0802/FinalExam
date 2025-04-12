@@ -5,10 +5,10 @@ import com.example.FinalExam.product.model.ProductDTO;
 import com.example.FinalExam.product.model.SearchProductQuery;
 import com.example.FinalExam.product.model.UpdateProductCommand;
 import com.example.FinalExam.product.services.*;
+import com.example.FinalExam.utils.PageResponse;
 import com.example.FinalExam.utils.SortMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -17,7 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -55,7 +54,7 @@ public class ProductController {
     @GetMapping("/product/{id}")
     public ResponseEntity<ProductDTO> getProduct(@PathVariable UUID id){
         logger.info("Request received to get product with ID: {}", id);
-       ProductDTO response = getProductService.execute(id);
+        ProductDTO response = getProductService.execute(id);
         logger.info("Product found: {}", response.getName());
         return ResponseEntity.ok(response);
     }
@@ -78,32 +77,38 @@ public class ProductController {
     }
 
     @GetMapping("/product/search")
-    public ResponseEntity<List<ProductDTO>> searchProduct(
+    public ResponseEntity<PageResponse<ProductDTO>> searchProduct(
             @RequestParam String search,
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "10") int size,
             @RequestParam(required = false, defaultValue = "") String category,
             @RequestParam(required = false, defaultValue = "") String sortBy
     ){
         logger.info("Search request received - search: {}, category: {}, sortBy: {}", search, category, sortBy);
         Sort sort = SortMapper.map(sortBy);
-        List<ProductDTO> response = searchProductService.execute(new SearchProductQuery(search, category, sort));
-        logger.info("Search completed, found {} products", response.size());
+        Pageable pageable = PageRequest.of(page, size, sort);
+        PageResponse<ProductDTO> response = searchProductService.execute(new SearchProductQuery(search, category, pageable));
+        logger.info("Search completed, found {} products", response.getContent().size());
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/product/category")
-    public ResponseEntity<List<ProductDTO>> searchProductByCategory(
+    public ResponseEntity<PageResponse<ProductDTO>> searchProductByCategory(
             @RequestParam String category,
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "10") int size,
             @RequestParam(required = false, defaultValue = "") String sortBy
     ){
-        logger.info("Request received to search product by category - category: {}, sortBy: {}", category, sortBy);
+        logger.info("Request received to search product by category - category: {}, sortBy: {}, page: {}", category, sortBy, page);
         Sort sort = SortMapper.map(sortBy);
-        List<ProductDTO> response = searchProductByCategoryService.execute(new SearchProductQuery(null, category, sort));
-        logger.info("Category search completed, found {} products", response.size());
+        Pageable pageable = PageRequest.of(page, size, sort);
+        PageResponse<ProductDTO> response = searchProductByCategoryService.execute(new SearchProductQuery(null, category, pageable));
+        logger.info("Category search completed, found {} products", response.getContent().size());
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/products")
-    public ResponseEntity<Page<ProductDTO>> getProducts(
+    public ResponseEntity<PageResponse<ProductDTO>> getProducts(
             @RequestParam(required = false, defaultValue = "0") int page,
             @RequestParam(required = false, defaultValue = "10") int size,
             @RequestParam(required = false, defaultValue = "") String sortBy
@@ -111,7 +116,7 @@ public class ProductController {
         logger.info("Request received to get products - page: {}, size: {}, sortBy: {}", page, size, sortBy);
         Sort sort = SortMapper.map(sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<ProductDTO> response = getProductsService.execute(pageable);
+        PageResponse<ProductDTO> response = getProductsService.execute(pageable);
         logger.info("Retrieved products page {} of size {}, total: {}", page, size, response.getTotalElements());
         return ResponseEntity.ok(response);
     }

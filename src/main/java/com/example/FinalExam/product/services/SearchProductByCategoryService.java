@@ -5,14 +5,14 @@ import com.example.FinalExam.category.CategoryRepository;
 import com.example.FinalExam.product.ProductRepository;
 import com.example.FinalExam.product.model.ProductDTO;
 import com.example.FinalExam.product.model.SearchProductQuery;
+import com.example.FinalExam.utils.PageResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
-public class SearchProductByCategoryService implements Query<SearchProductQuery, List<ProductDTO>> {
+public class SearchProductByCategoryService implements Query<SearchProductQuery, PageResponse<ProductDTO>> {
 
     private static final Logger logger = LoggerFactory.getLogger(SearchProductByCategoryService.class);
 
@@ -22,19 +22,25 @@ public class SearchProductByCategoryService implements Query<SearchProductQuery,
         this.productRepository = productRepository;
     }
 
-    public List<ProductDTO> execute(SearchProductQuery searchProductQuery){
-        logger.debug("Searching products by category: '{}', sort: {}",
-                searchProductQuery.getCategory(), searchProductQuery.getSort());
+    public PageResponse<ProductDTO> execute(SearchProductQuery searchProductQuery){
+        logger.debug("Searching products by category: '{}', sort: {}, page: {}",
+                searchProductQuery.getCategory(), searchProductQuery.getPageable().getSort(), searchProductQuery.getPageable());
 
-        List<ProductDTO> products = productRepository.searchByCategory(
-                        searchProductQuery.getCategory(), searchProductQuery.getSort())
-                .stream()
-                .map(ProductDTO::new)
-                .toList();
+        Page<ProductDTO> page = productRepository.searchByCategory(
+                searchProductQuery.getCategory(), searchProductQuery.getPageable())
+                .map(ProductDTO::new);
 
         logger.info("Category search results: {} products found in category '{}'",
-                products.size(), searchProductQuery.getCategory());
+                page.getContent().size(), searchProductQuery.getCategory());
 
-        return products;
+        return new PageResponse<>(
+                page.getContent(),
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.getNumberOfElements(),
+                page.isLast()
+        );
     }
 }

@@ -4,14 +4,14 @@ import com.example.FinalExam.common.Query;
 import com.example.FinalExam.product.ProductRepository;
 import com.example.FinalExam.product.model.ProductDTO;
 import com.example.FinalExam.product.model.SearchProductQuery;
+import com.example.FinalExam.utils.PageResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
-public class SearchProductService implements Query<SearchProductQuery, List<ProductDTO>> {
+public class SearchProductService implements Query<SearchProductQuery, PageResponse<ProductDTO>> {
 
     private static final Logger logger = LoggerFactory.getLogger(SearchProductService.class);
 
@@ -21,17 +21,15 @@ public class SearchProductService implements Query<SearchProductQuery, List<Prod
         this.productRepository = productRepository;
     }
 
-    public List<ProductDTO> execute(SearchProductQuery input){
-        logger.debug("Searching products with text: '{}', category: '{}', sort: {}",
-                input.getSearch(), input.getCategory(), input.getSort());
+    public PageResponse<ProductDTO> execute(SearchProductQuery input){
+        logger.debug("Searching products with text: '{}', category: '{}', sort: {}, page: {}",
+                input.getSearch(), input.getCategory(), input.getPageable().getSort(), input.getPageable());
 
-        List<ProductDTO> products = productRepository.searchByNameOrDescription(
-                        input.getSearch(), input.getCategory(), input.getSort())
-                .stream()
-                .map(ProductDTO::new)
-                .toList();
+        Page<ProductDTO> page = productRepository.searchByNameOrDescription(
+                        input.getSearch(), input.getCategory(), input.getPageable())
+                .map(ProductDTO::new);
 
-        logger.info("Search results: {} products found", products.size());
-        return products;
+        logger.info("Search results: {} products found", page.getContent().size());
+        return new PageResponse<>(page);
     }
 }

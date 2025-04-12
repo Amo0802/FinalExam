@@ -3,6 +3,7 @@ package com.example.FinalExam.product.services;
 import com.example.FinalExam.common.Query;
 import com.example.FinalExam.product.ProductRepository;
 import com.example.FinalExam.product.model.ProductDTO;
+import com.example.FinalExam.utils.PageResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
@@ -11,7 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
-public class GetProductsService implements Query<Pageable, Page<ProductDTO>> {
+public class GetProductsService implements Query<Pageable, PageResponse<ProductDTO>> {
 
     private static final Logger logger = LoggerFactory.getLogger(GetProductsService.class);
 
@@ -23,17 +24,25 @@ public class GetProductsService implements Query<Pageable, Page<ProductDTO>> {
 
     @Override
     @Cacheable(value = "products", key = "#pageable.pageNumber + '_' + #pageable.pageSize + '_' + #pageable.sort")
-    public Page<ProductDTO> execute(Pageable pageable) {
+    public PageResponse<ProductDTO> execute(Pageable pageable) {
 
         logger.debug("Fetching products with pageable: page={}, size={}, sort={}",
                 pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
 
         //.collect(Collectors.toList()) instead of .toList(), more control and mutable.
-        Page<ProductDTO> productDTOs = productRepository.findAll(pageable).map(ProductDTO::new);
+        Page<ProductDTO> page = productRepository.findAll(pageable).map(ProductDTO::new);
 
         logger.info("Retrieved {} products out of {} total",
-                productDTOs.getNumberOfElements(), productDTOs.getTotalElements());
+                page.getNumberOfElements(), page.getTotalElements());
 
-        return productDTOs;
+        return new PageResponse<>(
+                page.getContent(),
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.getNumberOfElements(),
+                page.isLast()
+        );
     }
 }
