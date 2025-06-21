@@ -1,5 +1,8 @@
 package com.example.FinalExam.exceptions;
 
+import lombok.Getter;
+
+@Getter
 public enum ErrorMessages {
     PRODUCT_NOT_FOUND("Product Not Found"),
     NAME_REQUIRED("Name is required"),
@@ -14,7 +17,4 @@ public enum ErrorMessages {
         this.message = message;
     }
 
-    public String getMessage() {
-        return message;
-    }
 }

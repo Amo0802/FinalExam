@@ -4,12 +4,14 @@ import com.example.FinalExam.category.Category;
 import com.example.FinalExam.product.ProductController;
 import com.example.FinalExam.product.model.*;
 import com.example.FinalExam.product.services.*;
+import com.example.FinalExam.security.JwtUtil;
 import com.example.FinalExam.utils.PageResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -32,7 +34,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(ProductController.class)
+@WebMvcTest(controllers = ProductController.class,
+        excludeAutoConfiguration = SecurityAutoConfiguration.class)
 public class ProductControllerTest {
 
     @Autowired
@@ -61,6 +64,9 @@ public class ProductControllerTest {
 
     @MockitoBean
     private GetProductsService getProductsService;
+
+    @MockitoBean
+    private JwtUtil jwtUtil;
 
     private UUID productId;
     private Product product;
@@ -127,7 +133,6 @@ public class ProductControllerTest {
 
     @Test
     void deleteProduct_Success() throws Exception {
-        // Since 'execute' is a void method, use 'doNothing' to mock it.
         doNothing().when(deleteProductService).execute(productId);
 
         mockMvc.perform(delete("/product/{id}", productId))

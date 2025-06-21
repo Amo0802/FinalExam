@@ -41,7 +41,6 @@ build/
 .gradle/
 
 # Spring Boot config
-application.properties
 application.yml
 
 # Maven Wrapper

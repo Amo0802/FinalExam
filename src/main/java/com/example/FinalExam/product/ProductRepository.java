@@ -20,9 +20,7 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
         SELECT p FROM Product p
         WHERE
             (:text IS NULL OR :text = '' OR LOWER(p.name) LIKE LOWER(CONCAT('%', :text, '%'))
-            OR LOWER(p.description) LIKE LOWER(CONCAT('%', :text, '%')))
-        AND
-            (:category IS NULL OR :category = '' OR LOWER(p.category.name) = LOWER(:category))
+             OR LOWER(p.description) LIKE LOWER(CONCAT('%', :text, '%')))
         """)
     Page<Product> searchByNameOrDescription(
         @Param("text") String text,

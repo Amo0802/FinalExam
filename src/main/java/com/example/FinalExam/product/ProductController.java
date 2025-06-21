@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -43,11 +44,12 @@ public class ProductController {
     }
 
     @PostMapping("/product")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ProductDTO> createProduct(@RequestBody Product product){
         logger.info("Request received to create product: {}", product.getName());
         ProductDTO response = createProductService.execute(product);
         logger.info("Product created with ID: {}", response.getId());
-        URI location = URI.create("/products/" + response.getId());
+        URI location = URI.create("/product/" + response.getId());
         return ResponseEntity.created(location).body(response);
     }
 
@@ -60,15 +62,16 @@ public class ProductController {
     }
 
     @DeleteMapping("/product/{id}")
+    @PreAuthorize("hasRole('SUPERUSER')")
     public ResponseEntity<Void> deleteProduct(@PathVariable UUID id){
         logger.info("Request received to delete product with ID: {}", id);
         deleteProductService.execute(id);
         logger.info("Product deleted with ID: {}", id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-        //return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/product/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ProductDTO> updateProduct(@PathVariable UUID id, @RequestBody Product product){
         logger.info("Request received to update product with ID: {}", id);
         ProductDTO response = updateProductService.execute(new UpdateProductCommand(id, product));
